@@ -7,9 +7,7 @@ Retrofit in Android | Get Data from an API
 
 # RetrofitMoshiAndCoil
 
-IMAGENS: https://www.instagram.com/p/CSxZny_LZTc/?utm_source=ig_web_copy_link
-
-
+ CHECK THE APP: https://www.instagram.com/p/CSxZny_LZTc/?utm_source=ig_web_copy_link
 
 This is an app to practice how to get data from an API on an Android device. I will use Retrofit in order to make the request
 and parse the response.
