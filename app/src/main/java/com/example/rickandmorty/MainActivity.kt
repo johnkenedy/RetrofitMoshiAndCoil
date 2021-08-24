@@ -1,47 +1,62 @@
 package com.example.rickandmorty
 
 import android.os.Bundle
-import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.GridLayoutManager
 import com.example.rickandmorty.adapter.MainAdapter
 import com.example.rickandmorty.databinding.ActivityMainBinding
-import com.example.rickandmorty.network.ApiClient
-import com.example.rickandmorty.network.CharacterResponse
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.example.rickandmorty.network.Character
+import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+
+    private val viewModel: MainViewModel by lazy {
+        ViewModelProvider(this).get(MainViewModel::class.java)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val client = ApiClient.apiService.fetchCharacters("1")
-        client.enqueue(object : Callback<CharacterResponse> {
+        observer()
 
-            override fun onResponse(
-                call: Call<CharacterResponse>,
-                response: Response<CharacterResponse>
-            ) {
-                if (response.isSuccessful) {
-                    Log.e("characters", "" + response.body())
-                    val result = response.body()?.result
-                    result?.let {
-                        val adapter = MainAdapter(result)
-                        binding.rvCharacters.layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
-                        binding.rvCharacters.adapter = adapter
-                    }
-                }
-            }
+    }
 
-            override fun onFailure(call: Call<CharacterResponse>, t: Throwable) {
-                Log.e("failed", "" + t.message)
-            }
+    private fun observer() {
+        viewModel.characterLiveData.observe(this, { state ->
+            processCharactersResponse(state)
         })
+    }
+
+    private fun adapter(character: List<Character>?) {
+        viewModel.characterLiveData.observe(this, {
+            val adapter = character?.let { MainAdapter(it) }
+            binding.rvCharacters.layoutManager =
+                GridLayoutManager(this, 2)
+            binding.rvCharacters.adapter = adapter
+        })
+    }
+
+    private fun processCharactersResponse(state: ScreenState<List<Character>?>) {
+
+        when (state) {
+            is ScreenState.Loading -> {
+                binding.cvProgressBar.visibility = View.VISIBLE
+            }
+            is ScreenState.Success -> {
+                binding.cvProgressBar.visibility = View.GONE
+                adapter(state.data)
+            }
+            is ScreenState.Error -> {
+                binding.cvProgressBar.visibility = View.GONE
+                val view = binding.cvProgressBar.rootView
+                Snackbar.make(view, state.message!!, Snackbar.LENGTH_LONG).show()
+            }
+        }
     }
 }
