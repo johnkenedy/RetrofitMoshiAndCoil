@@ -28,5 +28,5 @@ object ApiClient {
 
 interface ApiService {
     @GET("character")
-    fun fetchCharacters(@Query("page") page: String): Call<CharacterResponse>
+    suspend fun fetchCharacters(@Query("page") page: String): CharacterResponse
 }
